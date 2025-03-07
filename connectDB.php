@@ -3,16 +3,15 @@ $hostname = "localhost";
 $bancodedados = "jordan";
 $usuario = "root";
 $senha = "";
+$porta = 3307; // Defina a porta correta, se necessário
 
-// Conecta com o banco de dados
-$mysqli = new mysqli($hostname, $usuario, $senha, $bancodedados);
+$mysqli = new mysqli($hostname, $usuario, $senha, $bancodedados, $porta);
 
-// Verifica conexão 
+// Verifica se houve erro na conexão
 if ($mysqli->connect_error) {
-    die("Falha ao conectar no banco de dados: " . $mysqli->connect_error);
+    die("Falha na conexão com o banco de dados: " . $mysqli->connect_error);
 }
 
-// Definir o charset para evitar problemas com acentuação
+// Definir charset para evitar problemas com acentuação
 $mysqli->set_charset("utf8");
-
 ?>
