@@ -4,95 +4,84 @@ include "connectDB.php";
 
 // Função para verificar se o CPF é válido
 function validarCPF($cpf) {
-    // Remove caracteres especiais do CPF
-    $cpfOriginal = $cpf; // Armazena o CPF original para debug
-    $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    // Remove caracteres não numéricos
+    $cpf = preg_replace('/\D/', '', $cpf);
 
-    // Exibe para depuração
-    // echo "CPF Original: $cpfOriginal<br>";
-    // echo "CPF sem caracteres especiais: $cpf<br>";
-
-    // Verifica se o CPF tem 11 dígitos
+    // Verifica se tem 11 dígitos
     if (strlen($cpf) != 11) {
         return false;
     }
 
-    // Verifica se o CPF é uma sequência de números iguais (ex: 111.111.111-11)
+    // Verifica se todos os dígitos são iguais (ex: 111.111.111-11)
     if (preg_match('/(\d)\1{10}/', $cpf)) {
         return false;
     }
 
-    // Calcula o primeiro dígito verificador
-    $soma = 0;
-    for ($i = 0; $i < 9; $i++) {
-        $soma += (int) $cpf[$i] * (10 - $i);
+    // Calcula os dígitos verificadores
+    for ($j = 9; $j < 11; $j++) {
+        $soma = 0;
+        for ($i = 0; $i < $j; $i++) {
+            $soma += (int) $cpf[$i] * (($j + 1) - $i);
+        }
+        $resto = $soma % 11;
+        if ($cpf[$j] != ($resto < 2 ? 0 : 11 - $resto)) {
+            return false;
+        }
     }
-    $resto = $soma % 11;
-    $digito1 = $resto < 2 ? 0 : 11 - $resto;
-
-    // Calcula o segundo dígito verificador
-    $soma = 0;
-    for ($i = 0; $i < 10; $i++) {
-        $soma += (int) $cpf[$i] * (11 - $i);
-    }
-    $resto = $soma % 11;
-    $digito2 = $resto < 2 ? 0 : 11 - $resto;
-
-    // Verifica se os dígitos verificadores estão corretos
-    if ($cpf[9] != $digito1 || $cpf[10] != $digito2) {
-        return false;
-    }
-
-    // CPF válido
+    
     return true;
 }
 
 // Verificar se o formulário foi enviado
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nome = $_POST['nome'];
-    $cpf = $_POST['cpf'];
-    $data_nac = $_POST['data_nac'];
-    $telefone = $_POST['telefone'];
-    $email = $_POST['email'];
+    $nome = trim($_POST['nome']);
+    $cpf = trim($_POST['cpf']);
+    $email = trim($_POST['email']);
     $senha = $_POST['senha'];
     $senha_confirm = $_POST['senha_confirm'];
-    $tipo = $_POST['tipo'];
-    $genero = $_POST['genero'];
+    $grupo = $_POST['tipo']; // Deve ser ADM, EST ou CLI
 
     // Validar CPF
     if (!validarCPF($cpf)) {
-        echo "CPF inválido.";
-        exit;
+        die("Erro: CPF inválido.");
     }
 
     // Verificar se as senhas são iguais
     if ($senha !== $senha_confirm) {
-        echo "As senhas não coincidem.";
-        exit;
+        die("Erro: As senhas não coincidem.");
     }
 
     // Encriptar a senha
     $senhaHash = password_hash($senha, PASSWORD_BCRYPT);
 
     // Verificar se o email já existe
-    $sql = "SELECT * FROM usuarios WHERE email = ?";
+    $sql = "SELECT id FROM usuario WHERE email = ?";
     $stmt = $mysqli->prepare($sql);
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $resultado = $stmt->get_result();
 
     if ($resultado->num_rows > 0) {
-        echo "Este email já está cadastrado.";
-        exit;
+        die("Erro: Este email já está cadastrado.");
+    }
+
+    // Verificar se o CPF já existe
+    $sql = "SELECT id FROM usuario WHERE cpf = ?";
+    $stmt = $mysqli->prepare($sql);
+    $stmt->bind_param("s", $cpf);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+
+    if ($resultado->num_rows > 0) {
+        die("Erro: Este CPF já está cadastrado.");
     }
 
     // Inserir o novo usuário no banco de dados
-    $sql = "INSERT INTO usuarios (nome, cpf, data_nac, telefone, email, senha, tipo, genero, ativo) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)"; // 1 significa "ativo"
+    $sql = "INSERT INTO usuario (nome, cpf, email, senha, grupo, ativo) 
+            VALUES (?, ?, ?, ?, ?, 1)"; // 1 significa "ativo"
     
     $stmt = $mysqli->prepare($sql);
-    $stmt->bind_param("ssssssss", $nome, $cpf, $data_nac, $telefone, $email, $senhaHash, $tipo, $genero);
-
+    $stmt->bind_param("sssss", $nome, $cpf, $email, $senhaHash, $grupo);
 
     if ($stmt->execute()) {
         echo "Usuário cadastrado com sucesso!";
@@ -111,20 +100,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script>
         // Máscara para CPF
         function mascaraCPF(input) {
-            let value = input.value;
-            value = value.replace(/\D/g, "");
+            let value = input.value.replace(/\D/g, ""); // Remove tudo que não for número
             value = value.replace(/(\d{3})(\d)/, "$1.$2");
             value = value.replace(/(\d{3})(\d)/, "$1.$2");
             value = value.replace(/(\d{3})(\d{1,2})$/, "$1-$2");
-            input.value = value;
-        }
-
-        // Máscara para Telefone
-        function mascaraTelefone(input) {
-            let value = input.value;
-            value = value.replace(/\D/g, "");
-            value = value.replace(/^(\d{2})(\d)/g, "($1) $2");
-            value = value.replace(/(\d{5})(\d)/, "$1-$2");
             input.value = value;
         }
     </script>
@@ -138,12 +117,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label>CPF:</label>
         <input type="text" name="cpf" required oninput="mascaraCPF(this)"><br>
         
-        <label>Data de Nascimento:</label>
-        <input type="date" name="data_nac" required><br>
-        
-        <label>Telefone:</label>
-        <input type="text" name="telefone" required oninput="mascaraTelefone(this)"><br>
-        
         <label>Email:</label>
         <input type="email" name="email" required><br>
         
@@ -153,20 +126,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <label>Confirme a Senha:</label>
         <input type="password" name="senha_confirm" required><br>
         
-        <label>Tipo:</label>
+        <label>Grupo:</label>
         <select name="tipo" required>
-            <option value="admin">Administrador</option>
-            <option value="estoquista">Estoquista</option>
-        </select><br>
-        
-        <label>Gênero:</label>
-        <select name="genero" required>
-            <option value="Homem">Homem</option>
-            <option value="mulher">Mulher</option>
+            <option value="ADM">Administrador</option>
+            <option value="EST">Estoquista</option>
         </select><br>
         
         <button type="submit">Cadastrar</button>
     </form>
-    <li><a href="backofficeadm.php">voltar</a></li>
+    <li><a href="backofficeadm.php">Voltar</a></li>
 </body>
 </html>
