@@ -10,8 +10,8 @@ $offset = ($pagina - 1) * $itens_por_pagina;
 // Definição do filtro de busca
 $filtro = isset($_GET['filtro']) ? trim($_GET['filtro']) : '';
 
-// Query base para buscar produtos (AGORA COM O STATUS)
-$sql = "SELECT id, nome, avaliacao, descricao, preco, quantidade_estoque, status FROM produtos";
+// Query base para buscar produtos (ORDENADO DECRESCENTE)
+$sql = "SELECT id, nome, quantidade_estoque, preco, status FROM produtos";
 $parametros = [];
 $tipos = "";
 
@@ -54,19 +54,12 @@ $total_paginas = ceil($total_registros / $itens_por_pagina);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listar Produtos</title>
-
-    <script>
-        function confirmarAlteracaoStatus(id, status) {
-            const novaAcao = status == 1 ? "inativar" : "ativar";
-            const confirmacao = confirm(`Deseja ${novaAcao} este produto?`);
-            if (confirmacao) {
-                window.location.href = 'toggle_status_produto.php?id=' + id;
-            }
-        }
-    </script>
+    <title>Backoffice Estoquista - Produtos</title>
 
     <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
         .buttons-container {
             display: flex;
             justify-content: space-between;
@@ -97,10 +90,16 @@ $total_paginas = ceil($total_registros / $itens_por_pagina);
         .pagination a:hover {
             background-color: #ddd;
         }
+        .status-ativo {
+            color: green;
+        }
+        .status-inativo {
+            color: red;
+        }
     </style>
 </head>
 <body>
-    <h2>Lista de Produtos</h2>
+    <h2>Gestão de Produtos - Estoquista</h2>
 
     <form method="GET" action="">
         <input type="text" name="filtro" placeholder="Buscar produto..." value="<?php echo htmlspecialchars($filtro); ?>">
@@ -108,8 +107,7 @@ $total_paginas = ceil($total_registros / $itens_por_pagina);
     </form>
 
     <div class="buttons-container">
-        <button onclick="window.location.href='cadastrarProduto.php'"> + </button>
-        <button onclick="window.location.href='backofficeadm.php'">Voltar</button>
+        <button onclick="window.location.href='backofficeestoquista.php'">Voltar</button>
     </div>
 
     <table>
@@ -119,7 +117,7 @@ $total_paginas = ceil($total_registros / $itens_por_pagina);
             <th>Quantidade em Estoque</th>
             <th>Valor</th>
             <th>Status</th>
-            <th>Ações</th>
+            <th>Ação</th>
         </tr>
 
         <?php while ($row = $result->fetch_assoc()) { ?>
@@ -128,13 +126,13 @@ $total_paginas = ceil($total_registros / $itens_por_pagina);
             <td><?php echo htmlspecialchars($row['nome']); ?></td>
             <td><?php echo $row['quantidade_estoque']; ?></td>
             <td>R$ <?php echo number_format($row['preco'], 2, ',', '.'); ?></td>
-            <td><?php echo ($row['status'] == 1) ? '<span style="color: green;">Ativo</span>' : '<span style="color: red;">Inativo</span>'; ?></td>
             <td>
-                <a href="visualizarProdutoADM.php?id=<?php echo $row['id']; ?>">Visualizar</a>
-                <a href="alterarProduto.php?id=<?php echo $row['id']; ?>">Editar</a>
-                <button type="button" onclick="confirmarAlteracaoStatus(<?php echo $row['id']; ?>, <?php echo $row['status']; ?>)">
-                    <?php echo ($row['status'] == 1) ? 'Inativar' : 'Ativar'; ?>
-                </button>
+                <span class="<?php echo ($row['status'] == 1) ? 'status-ativo' : 'status-inativo'; ?>">
+                    <?php echo ($row['status'] == 1) ? 'Ativo' : 'Inativo'; ?>
+                </span>
+            </td>
+            <td>
+                <a href="alterarProdutoEstoquista.php?id=<?php echo $row['id']; ?>">Alterar</a>
             </td>
         </tr>
         <?php } ?>

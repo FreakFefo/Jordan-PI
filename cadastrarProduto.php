@@ -96,7 +96,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <label>Descrição:</label>
         <textarea name="descricao" maxlength="2000" required></textarea><br>
 
-        <label>Preço:</label>
+        <label>Preço produto:</label>
         <input type="number" name="preco" step="0.01" min="0" required><br>
 
         <label>Quantidade em Estoque:</label>
