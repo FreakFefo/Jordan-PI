@@ -3,13 +3,13 @@
 include "connectDB.php";
 
 // Iniciar a sessão para pegar o ID do usuário logado
-session_start();
+//session_start();
 
 // Verificar se o usuário está logado
-if (!isset($_SESSION['user_id'])) {
-    echo "Você não está logado.";
-    exit;
-}
+//if (!isset($_SESSION['user_id'])) {
+//    echo "Você não está logado.";
+//    exit;
+//}
 
 // Obter o ID do usuário logado
 $user_id = $_SESSION['user_id'];
@@ -24,7 +24,7 @@ $id_usuario = $_GET['id'];
 
 // Verificar se o usuário tem permissão para alterar o grupo de outro usuário
 // Se o usuário logado for o mesmo que o usuário a ser alterado, permitir alteração do grupo
-$sql = "SELECT * FROM usuarios WHERE id = ?";
+$sql = "SELECT * FROM usuario WHERE id = ?";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param("i", $id_usuario);
 $stmt->execute();
@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Atualizar os dados no banco de dados (exceto o email)
-    $sql = "UPDATE usuarios SET nome = ?, cpf = ?, senha = ?, tipo = ? WHERE id = ?";
+    $sql = "UPDATE usuario SET nome = ?, cpf = ?, senha = ?, grupo = ? WHERE id = ?";
     $stmt = $mysqli->prepare($sql);
 
     // Se a senha foi atualizada, passá-la para o SQL
@@ -106,6 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <form method="POST" action="">
         <label for="nome">Nome:</label>
         <input type="text" id="nome" name="nome" value="<?php echo htmlspecialchars($nome); ?>" required><br>
+
+        <label for="email">Email:</label>
+        <input type="text" id="email" name="email" value="<?php echo htmlspecialchars($usuario['email']); ?>" class="disabled" disabled>
+         
 
         <label for="cpf">CPF:</label>
         <input type="text" id="cpf" name="cpf" value="<?php echo htmlspecialchars($cpf); ?>" required><br>
