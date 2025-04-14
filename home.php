@@ -9,6 +9,14 @@ $sql = "SELECT p.id, p.nome, p.preco, i.caminho
         WHERE p.status = 1";
 $result = $mysqli->query($sql);
 
+// Função para realizar o logoff
+if (isset($_GET['logout'])) {
+    session_unset();
+    session_destroy();
+    header("Location: home.php");
+    exit();
+}
+
 // Contar itens no carrinho
 $quantidadeTotal = 0;
 if (isset($_SESSION['carrinho'])) {
@@ -16,6 +24,9 @@ if (isset($_SESSION['carrinho'])) {
         $quantidadeTotal += $item['quantidade'];
     }
 }
+
+// Verifica se o cliente está logado
+$usuario_logado = isset($_SESSION['usuario_id']);
 ?>
 
 <!DOCTYPE html>
@@ -31,7 +42,12 @@ if (isset($_SESSION['carrinho'])) {
         <img src="Image/logo.png" alt="Logo da Loja" class="logo">
         <div class="header-icons">
             <a href="verCarrinho.php" class="cart-icon">🛒 (<?php echo $quantidadeTotal; ?>)</a>
-            <a href="login.php">Faça login / Crie seu login</a>
+            <?php if ($usuario_logado): ?>
+                <a href="dashboard.php">Ir para Dashboard</a>
+                <a href="home.php?logout=true">Logoff</a>
+            <?php else: ?>
+                <a href="login.php">Faça login / Crie seu login</a>
+            <?php endif; ?>
         </div>
     </header>
 
