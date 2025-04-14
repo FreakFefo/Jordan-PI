@@ -31,7 +31,7 @@ if (isset($_SESSION['carrinho'])) {
         <img src="Image/logo.png" alt="Logo da Loja" class="logo">
         <div class="header-icons">
             <a href="verCarrinho.php" class="cart-icon">🛒 (<?php echo $quantidadeTotal; ?>)</a>
-            <a href="#">Faça login / Crie seu login</a>
+            <a href="login.php">Faça login / Crie seu login</a>
         </div>
     </header>
 

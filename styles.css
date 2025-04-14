@@ -1,3 +1,6 @@
+/* style.css */
+
+/* Estilo para o Header */
 header {
     background-color: #333;
     padding: 10px 0;
@@ -35,12 +38,3 @@ input, select {
 }
 
 input[type="submit"] {
-    background-color: #28a745;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-input[type="submit"]:hover {
-    background-color: #218838;
-}

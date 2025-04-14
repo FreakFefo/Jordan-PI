@@ -7,7 +7,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST['email']);
     $pwd = trim($_POST['pwd']);
 
-    // Consulta ao banco para encontrar o usuário
     $sql = "SELECT id, nome, email, senha, tipo FROM usuarios WHERE email = ?";
     $stmt = $mysqli->prepare($sql);
     
@@ -20,14 +19,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $result = $stmt->get_result();
     $usuario = $result->fetch_assoc();
 
-    // Verifica se encontrou um usuário e se a senha está correta
     if ($usuario && hash('sha256', $pwd) === $usuario['senha']) {
-        // Armazena o ID e outros dados do usuário na sessão
-        $_SESSION['user_id'] = $usuario['id']; // Corrigido para 'user_id'
+        $_SESSION['user_id'] = $usuario['id'];
         $_SESSION['nome'] = $usuario['nome'];
         $_SESSION['tipo'] = $usuario['tipo'];
 
-        // Redirecionamento de acordo com o tipo de usuário
         if ($usuario['tipo'] == 'admin') {
             header("Location: backofficeadm.php");
         } elseif ($usuario['tipo'] == 'estoquista') {
@@ -37,7 +33,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         exit();
     } else {
-        // Redireciona para a página de login com erro
         header("Location: login.php?errcode=1");
         exit();
     }
@@ -51,20 +46,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f8f8;
+        }
+        .logo {
+            height: 50px;
+        }
+        .nav-link {
+            text-decoration: none;
+            color: #000;
+            font-size: 16px;
+            padding: 8px 12px;
+            transition: color 0.2s;
+        }
+        .nav-link:hover {
+            color: #4CAF50;
+        }
+    </style>
 </head>
 <body>
 
-<header>
-    <blockquote>
-        <a href="index.php">
-            <img src="image/logos.png" alt="Logo">
-        </a>
-    </blockquote>
+<header class="header">
+    <a href="home.php">
+        <img src="Image/logo.png" alt="Logo" class="logo">
+    </a>
+    <a href="login.php" class="nav-link">Faça login / Crie seu login</a>
 </header>
 
-<blockquote>
 <div class="container">
-    <center><h1>Teste</h1></center>
+    <center><h1>Login</h1></center>
 
     <form action="login.php" method="post">
         <label for="email">Email:</label><br>
@@ -74,17 +89,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <input type="password" name="pwd" id="senha" required/><br><br>
 
         <input class="button" type="submit" value="Entrar"/>
-        <input class="button" type="button" name="cancelar" value="Cancelar" onClick="window.location='index.php';" />
+        <a href="cadastro.php" class="button">Cadastrar-se</a> <!-- Link para a página de cadastro -->
     </form>
 
-    <!-- Exibição de erros -->
     <?php
     if (isset($_GET['errcode'])) {
         $errorMessages = [
             1 => 'Usuário ou senha inválidos. Tente novamente.',
             2 => 'Por favor, faça login.'
         ];
-
         $errcode = intval($_GET['errcode']);
         if (array_key_exists($errcode, $errorMessages)) {
             echo '<p style="color: red; text-align: center;">' . htmlspecialchars($errorMessages[$errcode]) . '</p>';
@@ -92,7 +105,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     ?>
 </div>
-</blockquote>
 
 </body>
 </html>
