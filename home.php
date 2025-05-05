@@ -43,6 +43,7 @@ $usuario_logado = isset($_SESSION['usuario_id']);
         <div class="header-icons">
             <a href="verCarrinho.php" class="cart-icon">🛒 (<?php echo $quantidadeTotal; ?>)</a>
             <?php if ($usuario_logado): ?>
+                <a href="pedidos.php">Meus Pedidos</a>
                 <a href="dashboard.php">Ir para Dashboard</a>
                 <a href="home.php?logout=true">Logoff</a>
             <?php else: ?>

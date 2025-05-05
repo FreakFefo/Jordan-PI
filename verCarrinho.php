@@ -5,7 +5,7 @@ $carrinho = $_SESSION['carrinho'] ?? [];
 $freteEscolhido = $_SESSION['frete'] ?? null;
 $cepInformado = $_POST['cep'] ?? '';
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['frete'])) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['frete'])) {
     $_SESSION['frete'] = $_POST['frete'];
     $freteEscolhido = $_POST['frete'];
 }
@@ -16,16 +16,10 @@ foreach ($carrinho as $item) {
 }
 
 $frete = 0;
-if (empty($_SESSION['usuario_id'])) {
-    if ($freteEscolhido) {
-        switch ($freteEscolhido) {
-            case 'frete1': $frete = 15.00; break;
-            case 'frete2': $frete = 30.00; break;
-            case 'frete3': $frete = 50.00; break;
-        }
-    }
-} else {
-    $frete = 10.00;
+switch ($freteEscolhido) {
+    case 'frete1': $frete = 15.00; break;
+    case 'frete2': $frete = 30.00; break;
+    case 'frete3': $frete = 50.00; break;
 }
 
 $total = $subtotal + $frete;
@@ -37,15 +31,95 @@ $total = $subtotal + $frete;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Carrinho de Compras</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #fff;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .logo {
+            height: 50px;
+        }
+        .header-icons {
+            display: flex;
+            gap: 20px;
+            font-size: 16px;
+        }
+        .header-icons a {
+            text-decoration: none;
+            color: #333;
+        }
+        main {
+            max-width: 900px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        h1, h3 {
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #fafafa;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+        th {
+            background-color: #eee;
+        }
+        input[type="number"], input[type="text"] {
+            padding: 5px;
+            border: 1px solid #ccc;
+            width: 60px;
+        }
+        button, .btn {
+            background-color: #333;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            text-decoration: none;
+            display: inline-block;
+            border-radius: 4px;
+        }
+        button:hover, .btn:hover {
+            background-color: #555;
+        }
+        form {
+            margin-top: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        td a {
+            color: red;
+            text-decoration: none;
+        }
+    </style>
 </head>
 <body>
 <header>
-    <a href="home.php">
-        <img src="Image/logo.png" alt="Logo da Loja" class="logo">
-    </a>
+    <a href="home.php"><img src="Image/logo.png" alt="Logo da Loja" class="logo"></a>
     <div class="header-icons">
-        <a href="verCarrinho.php" class="cart-icon">🛒 (<?php echo count($carrinho); ?>)</a>
+        <a href="verCarrinho.php">🛒 (<?php echo count($carrinho); ?>)</a>
         <a href="#">Faça login / Crie seu login</a>
     </div>
 </header>
@@ -68,19 +142,19 @@ $total = $subtotal + $frete;
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($carrinho as $item): ?>
+                <?php foreach ($carrinho as $id => $item): ?>
                     <tr>
-                        <td><?php echo $item['nome']; ?></td>
+                        <td><?php echo htmlspecialchars($item['nome']); ?></td>
                         <td>
-                            <form method="POST" action="atualizarQuantidade.php" style="display:inline-block;">
-                                <input type="hidden" name="id" value="<?php echo $item['id']; ?>">
-                                <input type="number" name="quantidade" value="<?php echo $item['quantidade']; ?>" min="1" style="width:60px;">
+                            <form method="POST" action="atualizarQuantidade.php">
+                                <input type="hidden" name="id" value="<?php echo $id; ?>">
+                                <input type="number" name="quantidade" value="<?php echo $item['quantidade']; ?>" min="1">
                                 <button type="submit">Atualizar</button>
                             </form>
                         </td>
                         <td>R$ <?php echo number_format($item['preco'], 2, ',', '.'); ?></td>
                         <td>R$ <?php echo number_format($item['preco'] * $item['quantidade'], 2, ',', '.'); ?></td>
-                        <td><a href="removerProdutoCarrinho.php?id=<?php echo $item['id']; ?>">Remover</a></td>
+                        <td><a href="removerProdutoCarrinho.php?id=<?php echo $id; ?>">Remover</a></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
@@ -90,22 +164,21 @@ $total = $subtotal + $frete;
 
         <form method="POST" action="">
             <h3>Calcular o frete para meu CEP</h3>
-            <input type="text" name="cep" placeholder="Digite seu CEP" value="<?php echo htmlspecialchars($cepInformado); ?>" required style="width:200px;">
-            <br><br>
+            <input type="text" name="cep" placeholder="Digite seu CEP" value="<?php echo htmlspecialchars($cepInformado); ?>" required>
 
             <h3>Escolha o Frete</h3>
             <label>
-                <input type="radio" name="frete" value="frete1" <?php echo ($freteEscolhido == 'frete1') ? 'checked' : ''; ?>>
+                <input type="radio" name="frete" value="frete1" <?php echo ($freteEscolhido == 'frete1') ? 'checked' : ''; ?> onchange="this.form.submit()">
                 Frete 1 - R$ 15,00 (Total: R$ <?php echo number_format($subtotal + 15.00, 2, ',', '.'); ?>)
-            </label><br>
+            </label>
             <label>
-                <input type="radio" name="frete" value="frete2" <?php echo ($freteEscolhido == 'frete2') ? 'checked' : ''; ?>>
+                <input type="radio" name="frete" value="frete2" <?php echo ($freteEscolhido == 'frete2') ? 'checked' : ''; ?> onchange="this.form.submit()">
                 Frete 2 - R$ 30,00 (Total: R$ <?php echo number_format($subtotal + 30.00, 2, ',', '.'); ?>)
-            </label><br>
+            </label>
             <label>
-                <input type="radio" name="frete" value="frete3" <?php echo ($freteEscolhido == 'frete3') ? 'checked' : ''; ?>>
+                <input type="radio" name="frete" value="frete3" <?php echo ($freteEscolhido == 'frete3') ? 'checked' : ''; ?> onchange="this.form.submit()">
                 Frete 3 - R$ 50,00 (Total: R$ <?php echo number_format($subtotal + 50.00, 2, ',', '.'); ?>)
-            </label><br><br>
+            </label>
 
             <button type="submit">Atualizar Frete</button>
         </form>
@@ -113,20 +186,8 @@ $total = $subtotal + $frete;
         <h3>Frete Atual: R$ <?php echo number_format($frete, 2, ',', '.'); ?></h3>
         <h3>Total Atual: R$ <?php echo number_format($total, 2, ',', '.'); ?></h3>
 
-        <a href="finalizarCompra.php" class="btn">Finalizar Compra</a>
+        <a href="verificaCheckout.php" class="btn">Finalizar Compra</a>
     <?php endif; ?>
 </main>
 </body>
 </html>
-
-<style>
-    body { font-family: Arial, sans-serif; }
-    header { display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f8f8; }
-    .logo { height: 50px; }
-    .header-icons { display: flex; gap: 15px; }
-    .cart-icon { font-size: 24px; text-decoration: none; }
-    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-    table, th, td { border: 1px solid #ddd; }
-    th, td { padding: 10px; text-align: center; }
-    td a { color: red; text-decoration: none; }
-</style>

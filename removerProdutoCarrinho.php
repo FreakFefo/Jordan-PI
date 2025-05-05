@@ -7,23 +7,13 @@ if (!isset($_SESSION['carrinho']) || empty($_SESSION['carrinho']) || !isset($_GE
     exit;
 }
 
-// Obter o ID do produto a ser removido
-$produtoId = $_GET['id'];
+if (isset($_GET['id'])) {
+    $id = intval($_GET['id']);
 
-// Encontrar o índice do produto no carrinho
-foreach ($_SESSION['carrinho'] as $key => $item) {
-    if ($item['id'] == $produtoId) {
-        // Remover o produto do carrinho
-        unset($_SESSION['carrinho'][$key]);
-        break;
+    if (isset($_SESSION['carrinho'][$id])) {
+        unset($_SESSION['carrinho'][$id]);
     }
 }
 
-// Reindexar o array para garantir que os índices do carrinho sejam corrigidos
-$_SESSION['carrinho'] = array_values($_SESSION['carrinho']);
-
-// Redirecionar para a página do carrinho ou home
-header("Location: verCarrinho.php");
-exit;
-
-?>
+header('Location: verCarrinho.php');
+exit();

@@ -1,32 +1,26 @@
 <?php
 session_start();
-include "connectDB.php";
+include "connectDB.php"; // Conexão com o banco de dados
 
-// Verifica se o usuário está logado, se não estiver, redireciona para o login
+// Verifica se o usuário está logado
 if (!isset($_SESSION['usuario_id'])) {
     header("Location: login.php");
     exit();
 }
 
-// Verifica se foi solicitado o logoff
-if (isset($_GET['logout']) && $_GET['logout'] == 'true') {
-    session_unset(); // Limpa todas as variáveis da sessão
-    session_destroy(); // Destroi a sessão
-    echo "<script>alert('Você saiu da sua conta.'); window.location.href = 'home.php';</script>"; // Alerta e redireciona para a página inicial
-    exit();
-}
-
 $usuario_id = $_SESSION['usuario_id'];
 
+// Função para validar a senha
 function validarSenha($senha) {
     return strlen($senha) >= 6;
 }
 
+// Função para validar os dados de entrada
 function validarCampo($campo) {
     return trim($campo) !== "";
 }
 
-// Buscar dados do usuário
+// Buscar os dados do usuário
 $sql = "SELECT * FROM usuario WHERE id = ?";
 $stmt = $mysqli->prepare($sql);
 $stmt->bind_param("i", $usuario_id);
@@ -34,14 +28,16 @@ $stmt->execute();
 $result = $stmt->get_result();
 $usuario = $result->fetch_assoc();
 
+// Atualizar dados do usuário
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-
     if (isset($_POST['atualizar_dados'])) {
         $nome = $_POST['nome'];
         $data_nascimento = $_POST['data_nascimento'];
         $genero = $_POST['genero'];
 
+        // Verificação simples para garantir que os campos não estão vazios
         if (validarCampo($nome) && validarCampo($data_nascimento) && validarCampo($genero)) {
+            // Atualizar os dados do usuário
             $sqlUpdate = "UPDATE usuario SET nome = ?, data_nascimento = ?, genero = ? WHERE id = ?";
             $stmtUpdate = $mysqli->prepare($sqlUpdate);
             $stmtUpdate->bind_param("sssi", $nome, $data_nascimento, $genero, $usuario_id);
@@ -52,6 +48,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Alteração de senha
     if (isset($_POST['alterar_senha'])) {
         $senha_atual = $_POST['senha_atual'];
         $nova_senha = $_POST['nova_senha'];
@@ -73,6 +70,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     }
 
+    // Adicionar endereço de entrega
     if (isset($_POST['adicionar_endereco'])) {
         $cep = $_POST['cep'];
         $logradouro = $_POST['logradouro'];
@@ -83,27 +81,18 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $complemento = $_POST['complemento'];
 
         if (validarCampo($cep) && validarCampo($logradouro) && validarCampo($bairro) && validarCampo($cidade) && validarCampo($uf) && validarCampo($numero)) {
-            $sqlEndereco = "INSERT INTO endereco (usuario_id, cep, logradouro, numero, complemento, bairro, cidade, uf, tipo, padrao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'entrega', 0)";
+            $sqlEndereco = "INSERT INTO endereco (usuario_id, cep, logradouro, numero, complemento, bairro, cidade, uf, tipo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'entrega')";
             $stmtEndereco = $mysqli->prepare($sqlEndereco);
-            $stmtEndereco->bind_param("isssssss", $usuario_id, $cep, $logradouro, $numero, $complemento, $bairro, $cidade, $uf);
+            $stmtEndereco->bind_param("issssss", $usuario_id, $cep, $logradouro, $numero, $complemento, $bairro, $cidade, $uf);
             $stmtEndereco->execute();
             $sucesso = "Endereço de entrega adicionado com sucesso!";
         } else {
             $erro = "Por favor, preencha todos os campos de endereço.";
         }
     }
-
-    if (isset($_POST['definir_padrao'])) {
-        $endereco_id = $_POST['endereco_padrao'];
-        $mysqli->query("UPDATE endereco SET padrao = 0 WHERE usuario_id = $usuario_id AND tipo = 'entrega'");
-        $stmtPadrao = $mysqli->prepare("UPDATE endereco SET padrao = 1 WHERE id = ? AND usuario_id = ?");
-        $stmtPadrao->bind_param("ii", $endereco_id, $usuario_id);
-        $stmtPadrao->execute();
-        $sucesso = "Endereço padrão atualizado com sucesso!";
-    }
 }
 
-// Buscar endereços
+// Buscar os endereços de entrega do usuário
 $sqlEndereco = "SELECT * FROM endereco WHERE usuario_id = ? AND tipo = 'entrega'";
 $stmtEndereco = $mysqli->prepare($sqlEndereco);
 $stmtEndereco->bind_param("i", $usuario_id);
@@ -128,14 +117,6 @@ $enderecos = $resultEndereco->fetch_all(MYSQLI_ASSOC);
         </a>
     </div>
 </header>
-
-<main>
-    <h1>Bem-vindo, <?php echo $usuario['nome']; ?>!</h1>
-    <p>Aqui você pode editar seus dados e gerenciar seu perfil.</p>
-
-    <!-- Link de logoff com confirmação -->
-    <a href="dashboard.php?logout=true" onclick="return confirm('Tem certeza de que deseja sair da sua conta?');">Logoff</a>
-</main>
 
 <div class="container">
     <h1>Bem-vindo, <?php echo $usuario['nome']; ?>!</h1>
@@ -180,28 +161,10 @@ $enderecos = $resultEndereco->fetch_all(MYSQLI_ASSOC);
         <ul>
             <?php foreach ($enderecos as $endereco) { ?>
                 <li>
-                    <?php
-                        echo $endereco['logradouro'] . ', ' . $endereco['numero'] . ' - ' . $endereco['bairro'] . ', ' . $endereco['cidade'] . ' - ' . $endereco['uf'];
-                        if ($endereco['padrao']) echo " <strong>(Padrão)</strong>";
-                    ?>
+                    <?php echo $endereco['logradouro'] . ', ' . $endereco['numero'] . ' - ' . $endereco['bairro'] . ', ' . $endereco['cidade'] . ' - ' . $endereco['uf']; ?>
                 </li>
             <?php } ?>
         </ul>
-
-        <?php if (count($enderecos) > 1) { ?>
-            <h3>Definir Endereço Padrão</h3>
-            <form action="dashboard.php" method="POST">
-                <select name="endereco_padrao" required>
-                    <?php foreach ($enderecos as $endereco) { ?>
-                        <option value="<?php echo $endereco['id']; ?>" <?php if ($endereco['padrao']) echo 'selected'; ?>>
-                            <?php echo $endereco['logradouro'] . ', ' . $endereco['numero']; ?>
-                        </option>
-                    <?php } ?>
-                </select>
-                <br><br>
-                <input type="submit" name="definir_padrao" value="Salvar como padrão">
-            </form>
-        <?php } ?>
     <?php } else { ?>
         <p>Você não tem endereços de entrega cadastrados.</p>
     <?php } ?>
@@ -231,40 +194,8 @@ $enderecos = $resultEndereco->fetch_all(MYSQLI_ASSOC);
 
         <input type="submit" name="adicionar_endereco" value="Adicionar Endereço">
     </form>
+
 </div>
-
-<script>
-// JavaScript para preencher automaticamente os campos de endereço com base no CEP
-document.getElementById('cep').addEventListener('blur', function() {
-    let cep = this.value.replace(/\D/g, '');
-
-    if (cep.length !== 8) {
-        alert('CEP inválido. Deve conter 8 dígitos.');
-        return;
-    }
-
-    fetch('https://viacep.com.br/ws/' + cep + '/json/')
-        .then(response => {
-            if (!response.ok) throw new Error("Erro ao buscar CEP");
-            return response.json();
-        })
-        .then(data => {
-            if (data.erro) {
-                alert('CEP não encontrado.');
-                return;
-            }
-
-            document.getElementById('logradouro').value = data.logradouro;
-            document.getElementById('bairro').value = data.bairro;
-            document.getElementById('cidade').value = data.localidade;
-            document.getElementById('uf').value = data.uf;
-        })
-        .catch(error => {
-            console.error(error);
-            alert('Erro ao consultar o CEP.');
-        });
-});
-</script>
 
 </body>
 </html>

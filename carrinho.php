@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['carrinho'][$id]['quantidade'] += 1;
     } else {
         $_SESSION['carrinho'][$id] = [
+            'id' => $id,
             'nome' => $nome,
             'preco' => $preco,
             'quantidade' => 1
