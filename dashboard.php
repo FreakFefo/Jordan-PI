@@ -78,17 +78,39 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $cidade = $_POST['cidade'];
         $uf = $_POST['uf'];
         $numero = $_POST['numero'];
-        $complemento = $_POST['complemento'];
+        $complemento = $_POST['complemento'] ?: NULL;  // Se não houver complemento, será NULL
 
         if (validarCampo($cep) && validarCampo($logradouro) && validarCampo($bairro) && validarCampo($cidade) && validarCampo($uf) && validarCampo($numero)) {
+            // Corrigido para adicionar o tipo como 'entrega'
             $sqlEndereco = "INSERT INTO endereco (usuario_id, cep, logradouro, numero, complemento, bairro, cidade, uf, tipo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'entrega')";
             $stmtEndereco = $mysqli->prepare($sqlEndereco);
-            $stmtEndereco->bind_param("issssss", $usuario_id, $cep, $logradouro, $numero, $complemento, $bairro, $cidade, $uf);
+
+            // Corrigido para ter os tipos de dados corretos
+            $stmtEndereco->bind_param("isssssss", $usuario_id, $cep, $logradouro, $numero, $complemento, $bairro, $cidade, $uf);
             $stmtEndereco->execute();
             $sucesso = "Endereço de entrega adicionado com sucesso!";
         } else {
             $erro = "Por favor, preencha todos os campos de endereço.";
         }
+    }
+
+    // Marcar um endereço como padrão
+    if (isset($_POST['definir_padrao'])) {
+        $endereco_id = $_POST['endereco_id'];
+
+        // Definir todos os endereços como não padrão
+        $sqlAtualizarPadrao = "UPDATE endereco SET padrao = 0 WHERE usuario_id = ?";
+        $stmtAtualizarPadrao = $mysqli->prepare($sqlAtualizarPadrao);
+        $stmtAtualizarPadrao->bind_param("i", $usuario_id);
+        $stmtAtualizarPadrao->execute();
+
+        // Marcar o endereço selecionado como padrão
+        $sqlDefinirPadrao = "UPDATE endereco SET padrao = 1 WHERE id = ?";
+        $stmtDefinirPadrao = $mysqli->prepare($sqlDefinirPadrao);
+        $stmtDefinirPadrao->bind_param("i", $endereco_id);
+        $stmtDefinirPadrao->execute();
+
+        $sucesso = "Endereço padrão atualizado com sucesso!";
     }
 }
 
@@ -162,6 +184,14 @@ $enderecos = $resultEndereco->fetch_all(MYSQLI_ASSOC);
             <?php foreach ($enderecos as $endereco) { ?>
                 <li>
                     <?php echo $endereco['logradouro'] . ', ' . $endereco['numero'] . ' - ' . $endereco['bairro'] . ', ' . $endereco['cidade'] . ' - ' . $endereco['uf']; ?>
+                    <?php if ($endereco['padrao'] == 1) { ?>
+                        <span>(Endereço Padrão)</span>
+                    <?php } else { ?>
+                        <form action="dashboard.php" method="POST" style="display:inline;">
+                            <input type="hidden" name="endereco_id" value="<?php echo $endereco['id']; ?>">
+                            <input type="submit" name="definir_padrao" value="Definir como Padrão">
+                        </form>
+                    <?php } ?>
                 </li>
             <?php } ?>
         </ul>
@@ -196,6 +226,31 @@ $enderecos = $resultEndereco->fetch_all(MYSQLI_ASSOC);
     </form>
 
 </div>
+<script>
+document.getElementById('cep').addEventListener('blur', function () {
+    let cep = this.value.replace(/\D/g, '');
+
+    if (cep.length !== 8) return;
+
+    fetch(`https://viacep.com.br/ws/${cep}/json/`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.erro) {
+                alert("CEP não encontrado.");
+                return;
+            }
+
+            document.getElementById('logradouro').value = data.logradouro || '';
+            document.getElementById('bairro').value = data.bairro || '';
+            document.getElementById('cidade').value = data.localidade || '';
+            document.getElementById('uf').value = data.uf || '';
+        })
+        .catch(error => {
+            console.error('Erro ao buscar o CEP:', error);
+            alert("Erro ao buscar o CEP.");
+        });
+});
+</script>
 
 </body>
 </html>
