@@ -137,8 +137,8 @@ $total = $subtotal + $valorFrete;
 
         <h2>Endereço de Entrega</h2>
         <p>
-            <?= htmlspecialchars($endereco['rua']) ?>, <?= htmlspecialchars($endereco['numero']) ?><br>
-            <?= htmlspecialchars($endereco['bairro']) ?> - <?= htmlspecialchars($endereco['cidade']) ?>/<?= htmlspecialchars($endereco['estado']) ?><br>
+            <?= htmlspecialchars($endereco['logradouro']) ?>, <?= htmlspecialchars($endereco['numero']) ?><br>
+            <?= htmlspecialchars($endereco['bairro']) ?> - <?= htmlspecialchars($endereco['cidade']) ?>/<?= htmlspecialchars($endereco['uf']) ?><br>
             CEP: <?= htmlspecialchars($endereco['cep']) ?>
         </p>
 

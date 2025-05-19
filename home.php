@@ -46,8 +46,10 @@ $usuario_logado = isset($_SESSION['usuario_id']);
                 <a href="pedidos.php">Meus Pedidos</a>
                 <a href="dashboard.php">Ir para Dashboard</a>
                 <a href="home.php?logout=true">Logoff</a>
+                <a href="buscar_produto.php">Buscar Produto</a>
             <?php else: ?>
                 <a href="login.php">Faça login / Crie seu login</a>
+                <a href="buscar_produto.php">Buscar Produto</a>
             <?php endif; ?>
         </div>
     </header>

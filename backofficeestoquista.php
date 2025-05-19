@@ -1,3 +1,11 @@
+<?php
+if (isset($_GET['logout'])) {
+    session_unset();
+    session_destroy();
+    header("Location: home.php");
+    exit();
+}
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -9,5 +17,8 @@
     <h2>Principal</h2>
     <ul>
         <li><a href="listarprodutoestoquista.php">Listar Produtos</a></li>
+        <li><a href="todos_pedidos.php">Todos os pedidos</a></li>
+        <a href="home.php?logout=true">Logoff</a>
+
 </body>
 </html>

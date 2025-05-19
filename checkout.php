@@ -201,5 +201,8 @@ switch ($freteEscolhido) {
     }
 </script>
 
+
+
+
 </body>
 </html>

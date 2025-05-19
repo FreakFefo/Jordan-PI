@@ -31,12 +31,12 @@ foreach ($carrinho as $item) {
 }
 $total = $subtotal + $valorFrete;
 
-// Inserir pedido
-$stmtPedido = $mysqli->prepare("INSERT INTO pedidos (usuario_id, endereco_id, pagamento_tipo, total) VALUES (?, ?, ?, ?)");
+// Inserir pedido com valor_frete
+$stmtPedido = $mysqli->prepare("INSERT INTO pedidos (usuario_id, endereco_id, pagamento_tipo, total, valor_frete) VALUES (?, ?, ?, ?, ?)");
 if (!$stmtPedido) {
     die("Erro ao preparar pedido: " . $mysqli->error);
 }
-$stmtPedido->bind_param("iisd", $usuario_id, $endereco_id, $pagamento_tipo, $total);
+$stmtPedido->bind_param("iisdd", $usuario_id, $endereco_id, $pagamento_tipo, $total, $valorFrete);
 if (!$stmtPedido->execute()) {
     die("Erro ao salvar pedido: " . $stmtPedido->error);
 }

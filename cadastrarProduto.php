@@ -2,22 +2,18 @@
 include "connectDB.php";
 session_start();
 
-//if (!isset($_SESSION['user_id'])) {
-//    echo "Você não está logado.";
-//    exit;
-//}
-
 // Se o formulário foi enviado
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nome = trim($_POST['nome']);
+    $categoria = trim($_POST['categoria']);
     $avaliacao = floatval($_POST['avaliacao']);
     $descricao = trim($_POST['descricao']);
     $preco = floatval($_POST['preco']);
     $quantidade_estoque = intval($_POST['quantidade_estoque']);
 
-    // Inserir o produto
-    $stmt = $mysqli->prepare("INSERT INTO produtos (nome, avaliacao, descricao, preco, quantidade_estoque) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("sdssd", $nome, $avaliacao, $descricao, $preco, $quantidade_estoque);
+    // Inserir o produto com categoria
+    $stmt = $mysqli->prepare("INSERT INTO produtos (nome, categoria, avaliacao, descricao, preco, quantidade_estoque) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("ssdssd", $nome, $categoria, $avaliacao, $descricao, $preco, $quantidade_estoque);
     $stmt->execute();
     $produto_id = $stmt->insert_id;
     $stmt->close();
@@ -79,6 +75,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <form method="POST" action="" enctype="multipart/form-data">
         <label>Nome:</label>
         <input type="text" name="nome" maxlength="200" required><br>
+
+        <label>Categoria:</label>
+        <input type="text" name="categoria" maxlength="100" required><br>
 
         <label>Avaliação:</label>
         <select name="avaliacao" required>

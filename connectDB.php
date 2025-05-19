@@ -3,7 +3,7 @@ $hostname = "localhost";
 $bancodedados = "jordan";
 $usuario = "root";
 $senha = "";
-$porta = 3307; // Defina a porta correta, se necessário
+$porta = 3306; // Defina a porta correta, se necessário
 
 $mysqli = new mysqli($hostname, $usuario, $senha, $bancodedados, $porta);
 
